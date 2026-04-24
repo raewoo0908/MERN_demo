@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: ddareungi-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    command: ["--wiredTigerCacheSizeGB", "1"]
+
+volumes:
+  mongo-data:
