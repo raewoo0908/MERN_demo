@@ -47,6 +47,9 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 }
 
 export const api = {
+  health: () =>
+    getJson<{ status: string; timestamp: string }>('/api/health'),
+
   hourly: (from?: string, to?: string) =>
     getJson<ApiEnvelope<HourlyRow>>(`/api/hourly${buildQuery({ from, to })}`),
 

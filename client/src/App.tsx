@@ -40,6 +40,13 @@ export default function App() {
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fire-and-forget warmup ping: on Render free tier the server spins down after
+    // 15 min idle. The /api/health request wakes the dyno in parallel with the
+    // main data fetch, shaving ~30s off first-paint on a cold start.
+    void api.health().catch(() => {
+      /* warmup is best-effort; the real fetch below handles real errors */
+    });
+
     Promise.all([
       api.hourly(),
       api.duration(),

@@ -100,9 +100,47 @@ Open http://localhost:5173.
 
 ## Deployment
 
-- **Frontend** — Vercel
-- **Backend** — Render
+- **Frontend** — Vercel (root dir: `client/`)
+- **Backend** — Render Web Service (root dir: `server/`)
 - **Database** — MongoDB Atlas (aggregated collections only)
+
+### Prerequisites
+
+1. Push this repo to GitHub.
+2. Atlas M0 free cluster with aggregate collections uploaded via `cd scripts && npm run upload:atlas`. Verify counts with `npx tsx src/verifyAtlas.ts`.
+3. Create two Atlas DB users:
+   - **writer** (`readWrite` on the target DB) — stored in local `scripts/.env` as `MONGO_URI_ATLAS` for uploads.
+   - **reader** (`read` on the target DB or cluster-wide) — used only in Render's env.
+4. Atlas Network Access: allow `0.0.0.0/0` (Render free tier has no static egress IP).
+
+### Backend — Render
+
+- **New → Web Service** → connect GitHub repo.
+- Root Directory: `server`
+- Build Command: `npm install && npm run build`
+- Start Command: `node dist/index.js`
+- Environment:
+  - `MONGO_URI` = Atlas connection string with the **reader** user
+  - `CLIENT_URL` = `https://<your-project>.vercel.app` (set after first Vercel deploy)
+  - `NODE_ENV` = `production`
+- Verify: `curl https://<render-url>/api/health` → `{"status":"ok",...}`
+
+Note: the free tier spins down after 15 min idle (cold start ~30s). The client fires a warmup ping to `/api/health` on mount to hide this latency during normal navigation.
+
+### Frontend — Vercel
+
+- **Add New → Project** → connect GitHub repo.
+- Root Directory: `client`
+- Framework Preset: Vite (auto-detected)
+- Edit `client/vercel.json` — replace `REPLACE_WITH_RENDER_URL` with your actual Render hostname. This rewrites `/api/*` to Render so the browser sees same-origin requests (no CORS preflight).
+- No client-side env vars needed in prod. `VITE_API_URL` is only used for local builds outside the Vite proxy.
+
+### Gotchas
+
+- **CORS**: the server allows `CLIENT_URL` (comma-separated list) plus any `*.vercel.app` subdomain via regex. Preview deployments work without re-deploying the backend.
+- **Database name mismatch**: if `MONGO_URI_ATLAS` had no `/<dbname>` suffix when `upload:atlas` ran, data landed in `test`. Keep the same DB name in Render's `MONGO_URI`.
+- **Password encoding**: URL-encode special characters in the Atlas password (`@` → `%40`, `:` → `%3A`, etc.).
+- **Build dev-deps**: Render runs with dev dependencies available during the build step, so TypeScript compiles fine. Runtime only needs prod deps.
 
 ## Roadmap
 
@@ -111,5 +149,6 @@ Open http://localhost:5173.
 - [x] Day 3 — Derived aggregation pipeline + raw trip OD streaming + Atlas upload
 - [x] Day 4 — Express API routes
 - [x] Day 5 — Dashboard layout + KPI / heatmap / top / histogram
-- [ ] Day 6 — Map + weather scatter + filters
-- [ ] Day 7 — Polish, deploy, README screenshots
+- [x] Day 6 — Map + OD overlay + weather scatter + monthly trend + drill-down
+- [x] Day 7 — Q4/Q6 charts + responsive + a11y polish
+- [ ] Day 8 — Deploy (Vercel + Render), README screenshots
