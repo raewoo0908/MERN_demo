@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://REPLACE_WITH_RENDER_URL.onrender.com/api/:path*"
+      "destination": "https://mern-demo-ga6j.onrender.com/api/:path*"
     }
   ]
 }

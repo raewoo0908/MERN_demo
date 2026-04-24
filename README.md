@@ -117,13 +117,15 @@ Open http://localhost:5173.
 
 - **New → Web Service** → connect GitHub repo.
 - Root Directory: `server`
-- Build Command: `npm install && npm run build`
+- Build Command: `npm install --include=dev && npm run build`
 - Start Command: `node dist/index.js`
 - Environment:
   - `MONGO_URI` = Atlas connection string with the **reader** user
   - `CLIENT_URL` = `https://<your-project>.vercel.app` (set after first Vercel deploy)
   - `NODE_ENV` = `production`
 - Verify: `curl https://<render-url>/api/health` → `{"status":"ok",...}`
+
+**Why `--include=dev`**: `NODE_ENV=production` makes `npm install` skip `devDependencies`, but `typescript` and `@types/*` live there and are required to run `tsc`. The flag forces their installation for the build step only; runtime is unaffected.
 
 Note: the free tier spins down after 15 min idle (cold start ~30s). The client fires a warmup ping to `/api/health` on mount to hide this latency during normal navigation.
 
