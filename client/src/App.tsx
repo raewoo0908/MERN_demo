@@ -1,39 +1,95 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ApiError, api } from './api/client';
 import type {
+  DemographicRow,
   DurationRow,
   HourlyRow,
+  MonthlyRow,
+  StationRow,
   StationTotalRow,
+  UsertypeRow,
+  WeatherRow,
 } from './api/types';
+import { DemographicChart } from './components/DemographicChart';
 import { DurationHistogram } from './components/DurationHistogram';
 import { Heatmap } from './components/Heatmap';
 import { KpiRow } from './components/KpiRow';
+import { MonthlyTrendChart } from './components/MonthlyTrendChart';
 import { Section } from './components/Section';
 import { TopStationsChart } from './components/TopStationsChart';
+import { UsertypeChart } from './components/UsertypeChart';
+import { WeatherScatter } from './components/WeatherScatter';
+import { StationMap } from './components/map/StationMap';
+import { StationDrillDown } from './components/panels/StationDrillDown';
 
 interface DashboardData {
   hourly: HourlyRow[];
   duration: DurationRow[];
   topStations: StationTotalRow[];
+  topStations500: StationTotalRow[];
+  stations: StationRow[];
+  weather: WeatherRow[];
+  monthly: MonthlyRow[];
+  usertype: UsertypeRow[];
+  demographic: DemographicRow[];
 }
 
 export default function App() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedStation, setSelectedStation] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.hourly(), api.duration(), api.stationsTop(10)])
-      .then(([hourly, duration, topStations]) => {
-        setData({
-          hourly: hourly.data,
-          duration: duration.data,
-          topStations: topStations.data,
-        });
-      })
+    Promise.all([
+      api.hourly(),
+      api.duration(),
+      api.stationsTop(10),
+      api.stationsTop(500),
+      api.stations(),
+      api.weather(),
+      api.monthly(),
+      api.usertype(),
+      api.demographic(),
+    ])
+      .then(
+        ([
+          hourly,
+          duration,
+          top10,
+          top500,
+          stations,
+          weather,
+          monthly,
+          usertype,
+          demographic,
+        ]) => {
+          setData({
+            hourly: hourly.data,
+            duration: duration.data,
+            topStations: top10.data,
+            topStations500: top500.data,
+            stations: stations.data,
+            weather: weather.data,
+            monthly: monthly.data,
+            usertype: usertype.data,
+            demographic: demographic.data,
+          });
+        },
+      )
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : String(err));
       });
   }, []);
+
+  const selectedStationMaster = useMemo(() => {
+    if (!data || !selectedStation) return undefined;
+    return data.stations.find((s) => s.stationNumber === selectedStation);
+  }, [data, selectedStation]);
+
+  const selectedTopEntry = useMemo(() => {
+    if (!data || !selectedStation) return undefined;
+    return data.topStations500.find((s) => s.stationNumber === selectedStation);
+  }, [data, selectedStation]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,9 +145,58 @@ export default function App() {
                 <DurationHistogram duration={data.duration} />
               </Section>
             </div>
+
+            <Section
+              title="Station Map & OD Flows"
+              subtitle="2,729 stations · click a marker for per-station pattern · OD shows top-50 trips per bucket"
+            >
+              <StationMap
+                stations={data.stations}
+                topStations={data.topStations500}
+                selectedStation={selectedStation}
+                onSelect={setSelectedStation}
+              />
+            </Section>
+
+            <Section
+              title="Weather ↔ Hourly Trips"
+              subtitle="Pearson r · hourly join on UTC instant (Nov–Dec 2025)"
+            >
+              <WeatherScatter hourly={data.hourly} weather={data.weather} />
+            </Section>
+
+            <Section
+              title="Monthly Rentals by District"
+              subtitle="Jul – Nov 2025 (5 months; Dec data unavailable in source CSV)"
+            >
+              <MonthlyTrendChart monthly={data.monthly} />
+            </Section>
+
+            <Section
+              title="Subscriber vs Day Pass — Hourly Pattern"
+              subtitle="Toggle weekday/weekend to contrast commute peaks against leisure curves"
+            >
+              <UsertypeChart usertype={data.usertype} />
+            </Section>
+
+            <Section
+              title="Trips by Gender × Age Group"
+              subtitle="Rows with unknown gender or age are excluded"
+            >
+              <DemographicChart demographic={data.demographic} />
+            </Section>
           </>
         )}
       </main>
+
+      {data && selectedStation && (
+        <StationDrillDown
+          stationNumber={selectedStation}
+          stationMaster={selectedStationMaster}
+          topEntry={selectedTopEntry}
+          onClose={() => setSelectedStation(null)}
+        />
+      )}
     </div>
   );
 }

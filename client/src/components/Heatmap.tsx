@@ -36,13 +36,20 @@ export function Heatmap({ hourly }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-separate" style={{ borderSpacing: 2 }}>
+      <table
+        className="min-w-full border-separate"
+        style={{ borderSpacing: 2 }}
+        aria-label="요일별 시간대별 이용 건수 히트맵"
+      >
         <thead>
           <tr>
-            <th className="w-10"></th>
+            <th scope="col" className="w-10">
+              <span className="sr-only">요일</span>
+            </th>
             {Array.from({ length: 24 }, (_, h) => (
               <th
                 key={h}
+                scope="col"
                 className="text-[10px] font-medium text-gray-500"
                 style={{ minWidth: 28 }}
               >
@@ -54,15 +61,21 @@ export function Heatmap({ hourly }: Props) {
         <tbody>
           {DOW_LABELS.map((label, dow) => (
             <tr key={dow}>
-              <th className="pr-2 text-right text-xs font-medium text-gray-600">
+              <th
+                scope="row"
+                className="pr-2 text-right text-xs font-medium text-gray-600"
+              >
                 {label}
               </th>
               {matrix[dow].map((value, hour) => {
                 const intensity = max > 0 ? value / max : 0;
+                const cellLabel = `${label} ${hour}:00 — ${formatInt(value)} trips`;
                 return (
                   <td
                     key={hour}
-                    title={`${label} ${hour}:00 — ${formatInt(value)} trips`}
+                    role="img"
+                    aria-label={cellLabel}
+                    title={cellLabel}
                     className="text-center"
                     style={{
                       backgroundColor: cellColor(intensity),
