@@ -8,7 +8,16 @@
     "ingest:stations": "tsx src/ingestStations.ts",
     "ingest:hourly": "tsx src/ingestHourlyUsage.ts",
     "ingest:monthly": "tsx src/ingestStationMonthly.ts",
-    "ingest:weather": "tsx src/ingestWeather.ts"
+    "ingest:weather": "tsx src/ingestWeather.ts",
+    "agg:hourly": "tsx src/aggregate/aggHourly.ts",
+    "agg:stationDowHour": "tsx src/aggregate/aggStationDowHour.ts",
+    "agg:dowHourUsertype": "tsx src/aggregate/aggDowHourUsertype.ts",
+    "agg:demographicHour": "tsx src/aggregate/aggDemographicHour.ts",
+    "agg:stationTotal": "tsx src/aggregate/aggStationTotal.ts",
+    "agg:monthlyTrend": "tsx src/aggregate/aggMonthlyTrend.ts",
+    "agg:all": "npm run agg:hourly && npm run agg:stationDowHour && npm run agg:dowHourUsertype && npm run agg:demographicHour && npm run agg:stationTotal && npm run agg:monthlyTrend",
+    "stream:raw": "tsx src/aggregate/streamRawTrips.ts",
+    "upload:atlas": "tsx src/uploadToAtlas.ts"
   },
   "dependencies": {
     "csv-parse": "^5.5.6",

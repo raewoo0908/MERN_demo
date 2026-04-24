@@ -108,8 +108,8 @@ Open http://localhost:5173.
 
 - [x] Day 1 — Planning, scaffold, env, Docker
 - [x] Day 2 — Ingestion scripts (stations, hourly_usage, station_monthly, weather) + EUC-KR streaming preprocessing
-- [ ] Day 3 — Derived aggregation pipeline + raw trip OD streaming + Atlas upload
-- [ ] Day 4 — Express API routes
-- [ ] Day 5 — Dashboard layout + KPI / heatmap / top / histogram
+- [x] Day 3 — Derived aggregation pipeline + raw trip OD streaming + Atlas upload
+- [x] Day 4 — Express API routes
+- [x] Day 5 — Dashboard layout + KPI / heatmap / top / histogram
 - [ ] Day 6 — Map + weather scatter + filters
 - [ ] Day 7 — Polish, deploy, README screenshots
